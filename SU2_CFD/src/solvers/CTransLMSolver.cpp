@@ -25,6 +25,8 @@
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iostream>
+
 #include "../../include/solvers/CTransLMSolver.hpp"
 #include "../../include/variables/CTransLMVariable.hpp"
 #include "../../include/variables/CFlowVariable.hpp"
@@ -127,7 +129,7 @@ CTransLMSolver::CTransLMSolver(CGeometry *geometry, CConfig *config, unsigned sh
   Solution_Inf[1] = ReThetaT_Inf;
 
   /*--- Initialize the solution to the far-field state everywhere. ---*/
-  nodes = new CTransLMVariable(Intermittency_Inf, ReThetaT_Inf, 1.0, 1.0, nPoint, nDim, nVar, config);
+  nodes = new CTransLMVariable(Intermittency_Inf, ReThetaT_Inf, 123.0, 1.0, 1.0, nPoint, nDim, nVar, config);
   SetBaseClassPointerToNodes();
 
   /*--- MPI solution ---*/
@@ -255,6 +257,10 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
     Intermittency_Sep = min(max(0.0, Intermittency_Sep), 2.0);
     nodes -> SetIntermittencySep(iPoint, Intermittency_Sep);
     nodes -> SetIntermittencyEff(iPoint, Intermittency_Sep);
+
+    // Compute edge Mach number
+    su2double Mach_e = VelocityMag;
+    nodes -> SetMachE(iPoint, Mach_e);
 
   }
   END_SU2_OMP_FOR

@@ -28,7 +28,7 @@
 
 #include "../../include/variables/CTransLMVariable.hpp"
 
-CTransLMVariable::CTransLMVariable(su2double Intermittency, su2double ReThetaT, su2double gammaSep, su2double gammaEff, unsigned long npoint, unsigned long ndim, unsigned long nvar, CConfig *config)
+CTransLMVariable::CTransLMVariable(su2double Intermittency, su2double ReThetaT, su2double gammaSep, su2double gammaEff, su2double mach_e, unsigned long npoint, unsigned long ndim, unsigned long nvar, CConfig *config)
   : CTurbVariable(npoint, ndim, nvar, config) {
 
   for(unsigned long iPoint=0; iPoint<nPoint; ++iPoint)
@@ -42,6 +42,7 @@ CTransLMVariable::CTransLMVariable(su2double Intermittency, su2double ReThetaT, 
   /*--- Setting CTransLMVariable of intermittency_Eff---*/
   Intermittency_Eff.resize(nPoint) = gammaEff;
   Intermittency_Sep.resize(nPoint) = gammaSep;
+  Mach_e.resize(nPoint) = mach_e;
 
 }
 
@@ -54,4 +55,8 @@ void CTransLMVariable::SetIntermittencyEff(unsigned long iPoint, su2double val_I
 
 void CTransLMVariable::SetIntermittencySep(unsigned long iPoint, su2double val_Intermittency_sep) {
   Intermittency_Sep(iPoint) = val_Intermittency_sep;
+}
+
+void CTransLMVariable::SetMachE(unsigned long iPoint, su2double val_Mach_e) {
+  Mach_e(iPoint) = val_Mach_e;
 }

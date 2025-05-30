@@ -1266,6 +1266,7 @@ void CFlowOutput::SetVolumeOutputFieldsScalarSolution(const CConfig* config){
     case TURB_TRANS_MODEL::LM:
       AddVolumeOutput("INTERMITTENCY", "LM_gamma", "SOLUTION", "LM intermittency");
       AddVolumeOutput("RE_THETA_T", "LM_Re_t", "SOLUTION", "LM RE_THETA_T");
+      AddVolumeOutput("LM_MACH_E", "LM_Mach_e", "SOLUTION", "LM Mach_e");
       break;
 
     case TURB_TRANS_MODEL::NONE:
@@ -1562,6 +1563,7 @@ void CFlowOutput::LoadVolumeDataScalar(const CConfig* config, const CSolver* con
     case TURB_TRANS_MODEL::LM:
       SetVolumeOutputValue("INTERMITTENCY", iPoint, Node_Trans->GetSolution(iPoint, 0));
       SetVolumeOutputValue("RE_THETA_T", iPoint, Node_Trans->GetSolution(iPoint, 1));
+      SetVolumeOutputValue("LM_MACH_E", iPoint, Node_Trans->GetMachE(iPoint));
       SetVolumeOutputValue("INTERMITTENCY_SEP", iPoint, Node_Trans->GetIntermittencySep(iPoint));
       SetVolumeOutputValue("INTERMITTENCY_EFF", iPoint, Node_Trans->GetIntermittencyEff(iPoint));
       SetVolumeOutputValue("TURB_INDEX", iPoint, Node_Turb->GetTurbIndex(iPoint));

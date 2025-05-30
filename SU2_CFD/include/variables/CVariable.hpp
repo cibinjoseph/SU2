@@ -1698,6 +1698,18 @@ public:
    * \brief Get the value of the effective intermittency.
    * \return the value of the effective intermittency.
    */
+  inline virtual su2double GetMachE(unsigned long iPoint) const { return 0.0; }
+
+  /*!
+   * \brief Set the edge Mach number.
+   * \param[in] val_dist - Value of the edge Mach number (Mach_e).
+   */
+  inline virtual void SetMachE(unsigned long iPoint, su2double val_Mach_e) {}
+
+  /*!
+   * \brief Get the value of the effective intermittency.
+   * \return the value of the effective intermittency.
+   */
   inline virtual su2double GetIntermittencyEff(unsigned long iPoint) const { return 0.0; }
 
   /*!

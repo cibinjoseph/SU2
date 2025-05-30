@@ -40,6 +40,7 @@ class CTransLMVariable final : public CTurbVariable {
 protected:
   VectorType Intermittency_Eff;
   VectorType Intermittency_Sep;
+  VectorType Mach_e;
 
 public:
   /*!
@@ -53,7 +54,7 @@ public:
    * \param[in] nvar - Number of variables of the problem.
    * \param[in] config - Definition of the particular problem.
    */
-  CTransLMVariable(su2double Intermittency, su2double ReThetaT, su2double gammaSep, su2double gammaEff, unsigned long npoint, unsigned long ndim, unsigned long nvar, CConfig *config);
+  CTransLMVariable(su2double Intermittency, su2double ReThetaT, su2double gammaSep, su2double gammaEff, su2double mach_e, unsigned long npoint, unsigned long ndim, unsigned long nvar, CConfig *config);
 
   /*!
    * \brief Destructor of the class.
@@ -64,6 +65,11 @@ public:
    * \brief Set Separation intermittency.
    */
   void SetIntermittencySep(unsigned long iPoint, su2double val_Intermittency_sep) override;
+
+  /*!
+   * \brief Set edge Mach number.
+   */
+  void SetMachE(unsigned long iPoint, su2double val_Mach_e) override;
 
   /*!
    * \brief Set Effective intermittency.
@@ -79,5 +85,10 @@ public:
    * \brief Value of separation intermittency.
    */
   inline su2double GetIntermittencySep(unsigned long iPoint) const override { return Intermittency_Sep(iPoint); }
+
+  /*!
+   * \brief Value of separation intermittency.
+   */
+  inline su2double GetMachE(unsigned long iPoint) const override { return Mach_e(iPoint); }
 
 };
