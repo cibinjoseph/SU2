@@ -51,9 +51,10 @@ class TransLMCorrelations {
    * \brief Compute Re_theta_c from correlations.
    * \param[in] Tu - Turbulence intensity.
    * \param[in] Re_theta_t - Re_theta_t (TransVar[1]).
+   * \param[in] Mach_e - Edge Mach number.
    * \param[out] rethetac - Corrected value for Re_theta.
    */
-  su2double ReThetaC_Correlations(const su2double Tu, const su2double Re_theta_t) const {
+  su2double ReThetaC_Correlations(const su2double Tu, const su2double Re_theta_t, const su2double Mach_e=0.0) const {
 
     su2double rethetac = 0.0;
 
@@ -105,6 +106,25 @@ class TransLMCorrelations {
         } else {
           rethetac = Re_theta_t - (593.11 + 0.482 * (Re_theta_t - 1870.0));
         }
+
+        break;
+      }
+
+      case TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE: {
+        if (Re_theta_t <= 1870) {
+          const su2double FirstTerm = (-396.035 * pow(10, -2));
+          const su2double SecondTerm = (10120.656 * pow(10, -4)) * Re_theta_t;
+          const su2double ThirdTerm = (-868.230 * pow(10, -6)) * pow(Re_theta_t, 2);
+          const su2double ForthTerm = (696.506 * pow(10, -9)) * pow(Re_theta_t, 3);
+          const su2double FifthTerm = (-174.105 * pow(10, -12)) * pow(Re_theta_t, 4);
+          rethetac = FirstTerm + SecondTerm + ThirdTerm + ForthTerm + FifthTerm;
+        } else {
+          rethetac = Re_theta_t - (593.11 + 0.482 * (Re_theta_t - 1870.0));
+        }
+
+        // Multipy by f(Mach_e) for compressibility correction
+        const su2double fcorrection = 1.0105 + Mach_e*(-0.3046 + Mach_e*(1.1646 - 0.3605*Mach_e));
+        rethetac = rethetac * fcorrection;
 
         break;
       }
@@ -167,6 +187,22 @@ class TransLMCorrelations {
       }
 
       case TURB_TRANS_CORRELATION::MENTER_LANGTRY: {
+        if (Re_theta_t < 400) {
+          F_length1 = 39.8189 + (-119.270 * pow(10, -4)) * Re_theta_t +
+                      (-132.567 * pow(10, -6)) * Re_theta_t * Re_theta_t;
+        } else if (Re_theta_t < 596) {
+          F_length1 = 263.404 + (-123.939 * pow(10, -2)) * Re_theta_t +
+                      (194.548 * pow(10, -5)) * pow(Re_theta_t, 2) +
+                      (-101.695 * pow(10, -8)) * pow(Re_theta_t, 3);
+        } else if (Re_theta_t < 1200) {
+          F_length1 = 0.5 - (3.0 * pow(10, -4)) * (Re_theta_t - 596.0);
+        } else {
+          F_length1 = 0.3188;
+        }
+        break;
+      }
+
+      case TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE: {
         if (Re_theta_t < 400) {
           F_length1 = 39.8189 + (-119.270 * pow(10, -4)) * Re_theta_t +
                       (-132.567 * pow(10, -6)) * Re_theta_t * Re_theta_t;
