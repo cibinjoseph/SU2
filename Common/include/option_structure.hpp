@@ -1225,6 +1225,7 @@ enum class LM_OPTIONS {
   MEDIDA_BAEDER,/*!< \brief Kind of transition correlation model (Medida-Baeder). */
   MEDIDA,       /*!< \brief Kind of transition correlation model (Medida). */
   MENTER_LANGTRY,   /*!< \brief Kind of transition correlation model (Menter-Langtry). */
+  MENTER_LANGTRY_COMPRESSIBLE,   /*!< \brief Kind of transition correlation model with compressibility corrections (Menter-Langtry). */
   DEFAULT       /*!< \brief Kind of transition correlation model (Menter-Langtry if SST, MALAN if SA). */
 };
 
@@ -1237,6 +1238,7 @@ static const MapType<std::string, LM_OPTIONS> LM_Options_Map = {
   MakePair("KRAUSE_HYPER", LM_OPTIONS::KRAUSE_HYPER)
   MakePair("MEDIDA_BAEDER", LM_OPTIONS::MEDIDA_BAEDER)
   MakePair("MENTER_LANGTRY", LM_OPTIONS::MENTER_LANGTRY)
+  MakePair("MENTER_LANGTRY_COMPRESSIBLE", LM_OPTIONS::MENTER_LANGTRY_COMPRESSIBLE)
   MakePair("DEFAULT", LM_OPTIONS::DEFAULT)
 };
 
@@ -1251,6 +1253,7 @@ enum class TURB_TRANS_CORRELATION {
   MEDIDA_BAEDER,/*!< \brief Kind of transition correlation model (Medida-Baeder). */
   MEDIDA,       /*!< \brief Kind of transition correlation model (Medida). */
   MENTER_LANGTRY,   /*!< \brief Kind of transition correlation model (Menter-Langtry). */
+  MENTER_LANGTRY_COMPRESSIBLE,   /*!< \brief Kind of transition correlation model with compressibility corrections (Menter-Langtry). */
   DEFAULT       /*!< \brief Kind of transition correlation model (Menter-Langtry if SST, MALAN if SA). */
 };
 
@@ -1307,6 +1310,10 @@ inline LM_ParsedOptions ParseLMOptions(const LM_OPTIONS *LM_Options, unsigned sh
   }
   if (IsPresent(LM_OPTIONS::MENTER_LANGTRY)) {
     LMParsedOptions.Correlation = TURB_TRANS_CORRELATION::MENTER_LANGTRY;
+    NFoundCorrelations++;
+  }
+  if (IsPresent(LM_OPTIONS::MENTER_LANGTRY_COMPRESSIBLE)) {
+    LMParsedOptions.Correlation = TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE;
     NFoundCorrelations++;
   }
 

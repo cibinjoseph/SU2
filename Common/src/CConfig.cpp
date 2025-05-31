@@ -6332,6 +6332,7 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
             case TURB_TRANS_CORRELATION::MEDIDA_BAEDER: cout << "Medida and Baeder (2011)" << endl;  break;
             case TURB_TRANS_CORRELATION::MEDIDA: cout << "Medida PhD (2014)" << endl;  break;
             case TURB_TRANS_CORRELATION::MENTER_LANGTRY: cout << "Menter and Langtry (2009)" << endl;  break;
+            case TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE: cout << "Menter and Langtry (2009) With compressibility corrections" << endl;  break;
             case TURB_TRANS_CORRELATION::DEFAULT:
               switch (Kind_Turb_Model) {
                 case TURB_MODEL::SA: cout << "Malan et al. (2009)" << endl;  break;
