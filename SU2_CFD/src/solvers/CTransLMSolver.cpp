@@ -111,7 +111,18 @@ CTransLMSolver::CTransLMSolver(CGeometry *geometry, CConfig *config, unsigned sh
 
   const su2double Intermittency_Inf  = 1.0;
   su2double ReThetaT_Inf = 100.0;
-  const su2double Mach_e_Inf = 0.0;
+
+  const su2double rho_inf = config->GetDensity_FreeStream();
+  const su2double temp_inf = config->GetTemperature_FreeStream();
+  const su2double vel_u_inf = config->GetVelocity_FreeStream()[0];
+  const su2double vel_v_inf = config->GetVelocity_FreeStream()[1];
+  const su2double vel_w_inf = (nDim == 3) ? config->GetVelocity_FreeStream()[2] : 0.0;
+  const su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
+  const su2double gas_constant = config->GetGas_Constant();
+  const su2double sp_heat_ratio = config->GetGamma();
+
+  const su2double sound_inf = sqrt(sp_heat_ratio*gas_constant*temp_inf);
+  const su2double Mach_e_Inf = vel_inf / sound_inf;
 
   /*--- Momentum thickness Reynolds number, initialized from freestream turbulent intensity*/
   if (Intensity <= 1.3) {
@@ -124,6 +135,12 @@ CTransLMSolver::CTransLMSolver(CGeometry *geometry, CConfig *config, unsigned sh
   }
   else if(Intensity>1.3) {
     ReThetaT_Inf = 331.5*pow(Intensity-0.5658,-0.671);
+  }
+
+  // Cibin: Compressibility correction
+  if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
+    const su2double f_Mach_e = 1.0105 + Mach_e_Inf*(-0.3046 + Mach_e_Inf*(1.1646 - 0.3605*Mach_e_Inf));
+    ReThetaT_Inf *= f_Mach_e;
   }
 
   Solution_Inf[0] = Intermittency_Inf;
@@ -230,34 +247,33 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
     if(TurbFamily == TURB_FAMILY::SA)
       Tu = config->GetTurbulenceIntensity_FreeStream()*100;
 
-    su2double Corr_Rec = 0.0;
+    // Compute edge Mach number
+    const su2double pressure = flowNodes->GetPressure(iPoint);
+    const su2double pressure_inf = config->GetPressure_FreeStream();
+    const su2double rho_inf = config->GetDensity_FreeStream();
+    const su2double temp_inf = config->GetTemperature_FreeStream();
+    const su2double vel_u_inf = config->GetVelocity_FreeStream()[0];
+    const su2double vel_v_inf = config->GetVelocity_FreeStream()[1];
+    const su2double vel_w_inf = (nDim == 3) ? config->GetVelocity_FreeStream()[2] : 0.0;
+    su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
+    const su2double gas_constant = config->GetGas_Constant();
+    const su2double sp_heat_ratio = config->GetGamma();
 
+    su2double sp_heat_fraction = (sp_heat_ratio-1.0)/sp_heat_ratio;
+    su2double pressure_ratio = pow(pressure/pressure_inf, sp_heat_fraction);
+    su2double pressure_term = (2.0/sp_heat_fraction) * (1.0-pressure_ratio) * (pressure / rho_inf);
+
+    su2double sound_e = sqrt(sp_heat_ratio*gas_constant*temp_inf*pressure_ratio);
+    su2double vel_e = sqrt(pow(vel_inf, 2) + pressure_term);
+    const su2double Mach_e = vel_e / sound_e;
+    nodes -> SetMachE(iPoint, Mach_e);
+
+    su2double Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, Re_t);
+
+    // Compressibility correction term for Re_c
     if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
-      // Compute edge Mach number
-      const su2double pressure = flowNodes->GetPressure(iPoint);
-      const su2double pressure_inf = config->GetPressure_FreeStream();
-      const su2double rho_inf = config->GetDensity_FreeStream();
-      const su2double temp_inf = config->GetTemperature_FreeStream();
-      const su2double vel_u_inf = config->GetVelocity_FreeStream()[0];
-      const su2double vel_v_inf = config->GetVelocity_FreeStream()[1];
-      const su2double vel_w_inf = (nDim == 3) ? config->GetVelocity_FreeStream()[2] : 0.0;
-      su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
-      const su2double gas_constant = config->GetGas_Constant();
-      const su2double sp_heat_ratio = config->GetGamma();
-
-      su2double sp_heat_fraction = (sp_heat_ratio-1.0)/sp_heat_ratio;
-      su2double pressure_ratio = pow(pressure/pressure_inf, sp_heat_fraction);
-      su2double pressure_term = (2.0/sp_heat_fraction) * (1.0-pressure_ratio) * (pressure / rho_inf);
-
-      su2double sound_e = sqrt(sp_heat_ratio*gas_constant*temp_inf*pressure_ratio);
-      su2double vel_e = sqrt(pow(vel_inf, 2) + pressure_term);
-      su2double Mach_e = vel_e / sound_e;
-      nodes -> SetMachE(iPoint, Mach_e);
-
-      Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, Re_t, Mach_e);
-    }
-    else {
-      Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, Re_t);
+      const su2double C_Mach_e = 1.0 + Mach_e*(-0.06124 + Mach_e*(0.2402 - 0.00346*Mach_e));
+      Corr_Rec *= C_Mach_e;
     }
 
     su2double R_t = 1.0;
@@ -344,6 +360,7 @@ void CTransLMSolver::Source_Residual(CGeometry *geometry, CSolver **solver_conta
 
     /*--- Transition variables w/o reconstruction, and its gradient ---*/
 
+    numerics->SetMachEVar(nodes->GetMachE(iPoint), 0.0);
     numerics->SetTransVar(nodes->GetSolution(iPoint), nullptr);
     numerics->SetTransVarGradient(nodes->GetGradient(iPoint), nullptr);
 
