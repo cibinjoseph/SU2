@@ -51,10 +51,9 @@ class TransLMCorrelations {
    * \brief Compute Re_theta_c from correlations.
    * \param[in] Tu - Turbulence intensity.
    * \param[in] Re_theta_t - Re_theta_t (TransVar[1]).
-   * \param[in] Mach_e - Edge Mach number.
    * \param[out] rethetac - Corrected value for Re_theta.
    */
-  su2double ReThetaC_Correlations(const su2double Tu, const su2double Re_theta_t, const su2double Mach_e=0.0) const {
+  su2double ReThetaC_Correlations(const su2double Tu, const su2double Re_theta_t) const {
 
     su2double rethetac = 0.0;
 
@@ -121,10 +120,6 @@ class TransLMCorrelations {
         } else {
           rethetac = Re_theta_t - (593.11 + 0.482 * (Re_theta_t - 1870.0));
         }
-
-        // Multipy by f(Mach_e) for compressibility correction
-        const su2double fcorrection = 1.0105 + Mach_e*(-0.3046 + Mach_e*(1.1646 - 0.3605*Mach_e));
-        rethetac = rethetac * fcorrection;
 
         break;
       }

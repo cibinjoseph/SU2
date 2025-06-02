@@ -133,6 +133,9 @@ protected:
   const su2double
   *TransVar_i,  /*!< \brief Vector of turbulent variables at point i. */
   *TransVar_j;  /*!< \brief Vector of turbulent variables at point j. */
+  su2double
+  Mach_e_i, /*!< \brief Vector of edge Mach number variables at point i. */
+  Mach_e_j; /*!< \brief Vector of edge Mach number variables at point j. */
   const su2double
   *TurbPsi_i,  /*!< \brief Vector of adjoint turbulent variables at point i. */
   *TurbPsi_j;  /*!< \brief Vector of adjoint turbulent variables at point j. */
@@ -354,6 +357,16 @@ public:
   inline void SetScalarVar(const su2double *val_scalarvar_i, const su2double *val_scalarvar_j) {
     ScalarVar_i = val_scalarvar_i;
     ScalarVar_j = val_scalarvar_j;
+  }
+
+  /*!
+   * \brief Set the value of the scalar variable.
+   * \param[in] val_mach_e_i - Value of the scalar variable at point i.
+   * \param[in] val_mach_e_j - Value of the scalar variable at point j.
+   */
+  inline void SetMachEVar(su2double val_mach_e_i, su2double val_mach_e_j) {
+    Mach_e_i = val_mach_e_i;
+    Mach_e_j = val_mach_e_j;
   }
 
   /*!

@@ -25,6 +25,7 @@
  */
 
 #pragma once
+#include <iostream>
 #include "../../../../../Common/include/toolboxes/geometry_toolbox.hpp"
 #include "../../scalar/scalar_sources.hpp"
 #include "./trans_correlations.hpp"
@@ -98,6 +99,7 @@ class CSourcePieceWise_TransLM final : public CNumerics {
     AD::SetPreaccIn(StrainMag_i);
     AD::SetPreaccIn(ScalarVar_i, nVar);
     AD::SetPreaccIn(ScalarVar_Grad_i, nVar, nDim);
+    AD::SetPreaccIn(Mach_e_i);
     AD::SetPreaccIn(TransVar_i, nVar);
     AD::SetPreaccIn(TransVar_Grad_i, nVar, nDim);
     AD::SetPreaccIn(Volume);
@@ -131,32 +133,48 @@ class CSourcePieceWise_TransLM final : public CNumerics {
     if (dist_i > 1e-10) {
       su2double Tu = 1.0;
       if (TurbFamily == TURB_FAMILY::KW) Tu = max(100.0 * sqrt(2.0 * ScalarVar_i[0] / 3.0) / Velocity_Mag, 0.027);
+      // Cibin: LM Eq. 29
       if (TurbFamily == TURB_FAMILY::SA) Tu = config->GetTurbulenceIntensity_FreeStream() * 100;
 
       /*--- Corr_RetC correlation*/
-      const su2double Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, TransVar_i[1]);
+      // Cibin: LM Eq. 16
+      su2double Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, TransVar_i[1]);
+
+      // Cibin: Compressibility correction term for Rec
+      if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
+        const su2double C_Mach_e = 1.0 + Mach_e_i*(-0.06124 + Mach_e_i*(0.2402 - 0.00346*Mach_e_i));
+        Corr_Rec *= C_Mach_e;
+      }
 
       /*--- F_length correlation*/
+      // Cibin: LM Eq. 12
       const su2double Corr_F_length = TransCorrelations.FLength_Correlations(Tu, TransVar_i[1]);
 
       /*--- F_length ---*/
       su2double F_length = 0.0;
       if (TurbFamily == TURB_FAMILY::KW) {
+        // Cibin: LM Eq. 14
         const su2double r_omega = Density_i * dist_i * dist_i * ScalarVar_i[1] / Laminar_Viscosity_i;
+        // Cibin: LM Eq. 13
         const su2double f_sub = exp(-pow(r_omega / 200.0, 2));
+        // Cibin: LM Eq. 15
         F_length = Corr_F_length * (1. - f_sub) + 40.0 * f_sub;
       }
       if (TurbFamily == TURB_FAMILY::SA) F_length = Corr_F_length;
 
       /*--- F_onset ---*/
       su2double R_t = 1.0;
+      // Cibin: LM Eq. 9
       if (TurbFamily == TURB_FAMILY::KW) R_t = Density_i * ScalarVar_i[0] / Laminar_Viscosity_i / ScalarVar_i[1];
       if (TurbFamily == TURB_FAMILY::SA) R_t = Eddy_Viscosity_i / Laminar_Viscosity_i;
 
+      // Cibin: LM Eq. 6
       const su2double Re_v = Density_i * dist_i * dist_i * StrainMag_i / Laminar_Viscosity_i;
+      // Cibin: LM Eq. 7
       const su2double F_onset1 = Re_v / (2.193 * Corr_Rec);
       su2double F_onset2 = 1.0;
       su2double F_onset3 = 1.0;
+      // Cibin: LM Eq. 8
       if (TurbFamily == TURB_FAMILY::KW) {
         F_onset2 = min(max(F_onset1, pow(F_onset1, 4.0)), 2.0);
         F_onset3 = max(1.0 - pow(R_t / 2.5, 3.0), 0.0);
@@ -165,9 +183,11 @@ class CSourcePieceWise_TransLM final : public CNumerics {
         F_onset2 = min(max(F_onset1, pow(F_onset1, 4.0)), 4.0);
         F_onset3 = max(2.0 - pow(R_t / 2.5, 3.0), 0.0);
       }
+      // Cibin: LM Eq. 11
       const su2double F_onset = max(F_onset2 - F_onset3, 0.0);
 
       /*-- Gradient of velocity magnitude ---*/
+      // Cibin: LM Eq. 31-34
 
       su2double dU_dx = 0.5 / Velocity_Mag * (2. * vel_u * PrimVar_Grad_i[1][0] + 2. * vel_v * PrimVar_Grad_i[2][0]);
       if (nDim == 3) dU_dx += 0.5 / Velocity_Mag * (2. * vel_w * PrimVar_Grad_i[3][0]);
@@ -188,13 +208,14 @@ class CSourcePieceWise_TransLM final : public CNumerics {
       su2double time_scale = 500.0 * Laminar_Viscosity_i / Density_i / Velocity_Mag / Velocity_Mag;
       if (options.LM2015)
         time_scale = min(time_scale,
-                         Density_i * LocalGridLength_i * LocalGridLength_i / (Laminar_Viscosity_i + Eddy_Viscosity_i));
+            Density_i * LocalGridLength_i * LocalGridLength_i / (Laminar_Viscosity_i + Eddy_Viscosity_i));
       const su2double theta_bl = TransVar_i[1] * Laminar_Viscosity_i / Density_i / Velocity_Mag;
       const su2double delta_bl = 7.5 * theta_bl;
       const su2double delta = 50.0 * VorticityMag * dist_i / Velocity_Mag * delta_bl + 1e-20;
 
       su2double f_wake = 0.0;
       if (TurbFamily == TURB_FAMILY::KW) {
+        // Cibin: LM Eq. 26
         const su2double re_omega = Density_i * ScalarVar_i[1] * dist_i * dist_i / Laminar_Viscosity_i;
         f_wake = exp(-pow(re_omega / (1.0e+05), 2));
       }
@@ -219,21 +240,25 @@ class CSourcePieceWise_TransLM final : public CNumerics {
 
       for (int iter = 0; iter < 100; iter++) {
         su2double theta = Corr_Ret * Laminar_Viscosity_i / Density_i / Velocity_Mag;
+        // Cibin: LM Eq. 28
         lambda = Density_i * theta * theta / Laminar_Viscosity_i * du_ds;
         lambda = min(max(-0.1, lambda), 0.1);
 
+        // Cibin: LM Eq. 37-38
         if (lambda <= 0.0) {
           f_lambda = 1. - (-12.986 * lambda - 123.66 * lambda * lambda - 405.689 * lambda * lambda * lambda) *
-                              exp(-pow(Tu / 1.5, 1.5));
+            exp(-pow(Tu / 1.5, 1.5));
         } else {
           f_lambda = 1. + 0.275 * (1. - exp(-35. * lambda)) * exp(-Tu / 0.5);
         }
 
+        // Cibin: LM Eq. 35-36
         if (Tu <= 1.3) {
           Corr_Ret = f_lambda * (1173.51 - 589.428 * Tu + 0.2196 / Tu / Tu);
         } else {
           Corr_Ret = 331.5 * f_lambda * pow(Tu - 0.5658, -0.671);
         }
+
         Corr_Ret = max(Corr_Ret, Corr_Ret_lim);
 
         Retheta_Error = fabs(Retheta_old - Corr_Ret) / Retheta_old;
@@ -243,6 +268,12 @@ class CSourcePieceWise_TransLM final : public CNumerics {
         }
 
         Retheta_old = Corr_Ret;
+      }
+
+      // Cibin: Compressibility correction
+      if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
+        const su2double f_Mach_e = 1.0105 + Mach_e_i*(-0.3046 + Mach_e_i*(1.1646 - 0.3605*Mach_e_i));
+        Corr_Ret *= f_Mach_e;
       }
 
       /*-- Corr_RetT_SCF Correlations--*/
@@ -286,13 +317,16 @@ class CSourcePieceWise_TransLM final : public CNumerics {
       }
 
       /*-- production term of Intermeittency(Gamma) --*/
+      // Cibin: LM Eq. 4
       const su2double Pg =
           F_length * c_a1 * Density_i * StrainMag_i * sqrt(F_onset * TransVar_i[0]) * (1.0 - c_e1 * TransVar_i[0]);
 
       /*-- destruction term of Intermeittency(Gamma) --*/
+      // Cibin: LM Eq. 5
       const su2double Dg = c_a2 * Density_i * VorticityMag * TransVar_i[0] * f_turb * (c_e2 * TransVar_i[0] - 1.0);
 
       /*-- production term of ReThetaT --*/
+      // Cibin: LM Eq. 22
       const su2double PRethetat = c_theta * Density_i / time_scale * (Corr_Ret - TransVar_i[1]) * (1.0 - f_theta);
 
       /*-- destruction term of ReThetaT --*/
