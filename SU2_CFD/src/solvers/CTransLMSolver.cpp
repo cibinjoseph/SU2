@@ -266,16 +266,16 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
     if (nDim == 3){
       vel_w_inf = (is_dimensional) ? config->GetVelocity_FreeStream()[2] : config->GetVelocity_FreeStreamND()[2];
     }
-    su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
+    const su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
     const su2double gas_constant = (is_dimensional) ? config->GetGas_Constant() : config->GetGas_ConstantND();
     const su2double sp_heat_ratio = config->GetGamma();
 
-    su2double sp_heat_fraction = (sp_heat_ratio-1.0)/sp_heat_ratio;
-    su2double pressure_ratio = pow(pressure/pressure_inf, sp_heat_fraction);
-    su2double pressure_term = (2.0/sp_heat_fraction) * (1.0-pressure_ratio) * (pressure / rho_inf);
+    const su2double sp_heat_fraction = (sp_heat_ratio-1.0)/sp_heat_ratio;
+    const su2double pressure_ratio = pow(pressure/pressure_inf, sp_heat_fraction);
+    const su2double pressure_term = (2.0/sp_heat_fraction) * (1.0-pressure_ratio) * (pressure / rho_inf);
 
-    su2double sound_e = sqrt(sp_heat_ratio*gas_constant*temp_inf*pressure_ratio);
-    su2double vel_e = sqrt(pow(vel_inf, 2) + pressure_term);
+    const su2double sound_e = sqrt(sp_heat_ratio*gas_constant*temp_inf*pressure_ratio);
+    const su2double vel_e = sqrt(pow(vel_inf, 2) + pressure_term);
     const su2double Mach_e = vel_e / sound_e;
     nodes -> SetMachE(iPoint, Mach_e);
 
