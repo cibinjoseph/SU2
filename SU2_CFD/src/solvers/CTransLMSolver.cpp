@@ -124,7 +124,7 @@ CTransLMSolver::CTransLMSolver(CGeometry *geometry, CConfig *config, unsigned sh
     vel_w_inf = (is_dimensional) ? config->GetVelocity_FreeStream()[2] : config->GetVelocity_FreeStreamND()[2];
   }
   const su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
-  const su2double gas_constant = config->GetGas_Constant();
+  const su2double gas_constant = (is_dimensional) ? config->GetGas_Constant() : config->GetGas_ConstantND();
   const su2double sp_heat_ratio = config->GetGamma();
 
   const su2double sound_inf = sqrt(sp_heat_ratio*gas_constant*temp_inf);
@@ -267,7 +267,7 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
       vel_w_inf = (is_dimensional) ? config->GetVelocity_FreeStream()[2] : config->GetVelocity_FreeStreamND()[2];
     }
     su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
-    const su2double gas_constant = config->GetGas_Constant();
+    const su2double gas_constant = (is_dimensional) ? config->GetGas_Constant() : config->GetGas_ConstantND();
     const su2double sp_heat_ratio = config->GetGamma();
 
     su2double sp_heat_fraction = (sp_heat_ratio-1.0)/sp_heat_ratio;
