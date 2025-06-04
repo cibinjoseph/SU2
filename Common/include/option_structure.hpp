@@ -1232,13 +1232,13 @@ enum class LM_OPTIONS {
 static const MapType<std::string, LM_OPTIONS> LM_Options_Map = {
   MakePair("NONE", LM_OPTIONS::NONE)
   MakePair("LM2015", LM_OPTIONS::LM2015)
+  MakePair("MENTER_LANGTRY_COMPRESSIBLE", LM_OPTIONS::MENTER_LANGTRY_COMPRESSIBLE)
   MakePair("MALAN", LM_OPTIONS::MALAN)
   MakePair("SULUKSNA", LM_OPTIONS::SULUKSNA)
   MakePair("KRAUSE", LM_OPTIONS::KRAUSE)
   MakePair("KRAUSE_HYPER", LM_OPTIONS::KRAUSE_HYPER)
   MakePair("MEDIDA_BAEDER", LM_OPTIONS::MEDIDA_BAEDER)
   MakePair("MENTER_LANGTRY", LM_OPTIONS::MENTER_LANGTRY)
-  MakePair("MENTER_LANGTRY_COMPRESSIBLE", LM_OPTIONS::MENTER_LANGTRY_COMPRESSIBLE)
   MakePair("DEFAULT", LM_OPTIONS::DEFAULT)
 };
 
@@ -1253,7 +1253,6 @@ enum class TURB_TRANS_CORRELATION {
   MEDIDA_BAEDER,/*!< \brief Kind of transition correlation model (Medida-Baeder). */
   MEDIDA,       /*!< \brief Kind of transition correlation model (Medida). */
   MENTER_LANGTRY,   /*!< \brief Kind of transition correlation model (Menter-Langtry). */
-  MENTER_LANGTRY_COMPRESSIBLE,   /*!< \brief Kind of transition correlation model with compressibility corrections (Menter-Langtry). */
   DEFAULT       /*!< \brief Kind of transition correlation model (Menter-Langtry if SST, MALAN if SA). */
 };
 
@@ -1263,6 +1262,7 @@ enum class TURB_TRANS_CORRELATION {
 struct LM_ParsedOptions {
   LM_OPTIONS version = LM_OPTIONS::NONE;  /*!< \brief LM base model. */
   bool LM2015 = false;                    /*!< \brief Use cross-flow corrections. */
+  bool LMCompressible = false;            /*!< \brief Use compressibility corrections. */
   TURB_TRANS_CORRELATION Correlation = TURB_TRANS_CORRELATION::DEFAULT;
 };
 
@@ -1282,6 +1282,7 @@ inline LM_ParsedOptions ParseLMOptions(const LM_OPTIONS *LM_Options, unsigned sh
   };
 
   LMParsedOptions.LM2015 = IsPresent(LM_OPTIONS::LM2015);
+  LMParsedOptions.LMCompressible = IsPresent(LM_OPTIONS::MENTER_LANGTRY_COMPRESSIBLE);
 
   int NFoundCorrelations = 0;
   if (IsPresent(LM_OPTIONS::MALAN)) {
@@ -1310,10 +1311,6 @@ inline LM_ParsedOptions ParseLMOptions(const LM_OPTIONS *LM_Options, unsigned sh
   }
   if (IsPresent(LM_OPTIONS::MENTER_LANGTRY)) {
     LMParsedOptions.Correlation = TURB_TRANS_CORRELATION::MENTER_LANGTRY;
-    NFoundCorrelations++;
-  }
-  if (IsPresent(LM_OPTIONS::MENTER_LANGTRY_COMPRESSIBLE)) {
-    LMParsedOptions.Correlation = TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE;
     NFoundCorrelations++;
   }
 

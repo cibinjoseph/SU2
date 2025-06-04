@@ -144,7 +144,7 @@ CTransLMSolver::CTransLMSolver(CGeometry *geometry, CConfig *config, unsigned sh
   }
 
   // Cibin: Compressibility correction
-  if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
+  if (options.LMCompressible){
     const su2double f_Mach_e = 1.0105 + Mach_e_Inf*(-0.3046 + Mach_e_Inf*(1.1646 - 0.3605*Mach_e_Inf));
     ReThetaT_Inf *= f_Mach_e;
   }
@@ -282,7 +282,7 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
     su2double Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, Re_t);
 
     // Compressibility correction term for Re_c
-    if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
+    if (options.LMCompressible){
       const su2double C_Mach_e = 1.0 + Mach_e*(-0.06124 + Mach_e*(0.2402 - 0.00346*Mach_e));
       Corr_Rec *= C_Mach_e;
     }

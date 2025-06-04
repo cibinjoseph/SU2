@@ -141,7 +141,7 @@ class CSourcePieceWise_TransLM final : public CNumerics {
       su2double Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, TransVar_i[1]);
 
       // Cibin: Compressibility correction term for Rec
-      if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
+      if (options.LMCompressible){
         const su2double C_Mach_e = 1.0 + Mach_e_i*(-0.06124 + Mach_e_i*(0.2402 - 0.00346*Mach_e_i));
         Corr_Rec *= C_Mach_e;
       }
@@ -271,7 +271,7 @@ class CSourcePieceWise_TransLM final : public CNumerics {
       }
 
       // Cibin: Compressibility correction
-      if(options.Correlation == TURB_TRANS_CORRELATION::MENTER_LANGTRY_COMPRESSIBLE){
+      if (options.LMCompressible){
         const su2double f_Mach_e = 1.0105 + Mach_e_i*(-0.3046 + Mach_e_i*(1.1646 - 0.3605*Mach_e_i));
         Corr_Ret *= f_Mach_e;
       }
