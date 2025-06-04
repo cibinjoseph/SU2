@@ -112,11 +112,17 @@ CTransLMSolver::CTransLMSolver(CGeometry *geometry, CConfig *config, unsigned sh
   const su2double Intermittency_Inf  = 1.0;
   su2double ReThetaT_Inf = 100.0;
 
-  const su2double rho_inf = config->GetDensity_FreeStream();
-  const su2double temp_inf = config->GetTemperature_FreeStream();
-  const su2double vel_u_inf = config->GetVelocity_FreeStream()[0];
-  const su2double vel_v_inf = config->GetVelocity_FreeStream()[1];
-  const su2double vel_w_inf = (nDim == 3) ? config->GetVelocity_FreeStream()[2] : 0.0;
+
+  const bool is_dimensional = (config->GetRef_NonDim() == DIMENSIONAL);
+  const su2double rho_inf = (is_dimensional) ? config->GetDensity_FreeStream() : config->GetDensity_FreeStreamND();
+  const su2double temp_inf = (is_dimensional) ? config->GetTemperature_FreeStream() : config->GetTemperature_FreeStreamND();
+
+  const su2double vel_u_inf = (is_dimensional) ?  config->GetVelocity_FreeStream()[0] : config->GetVelocity_FreeStreamND()[0];
+  const su2double vel_v_inf = (is_dimensional) ?  config->GetVelocity_FreeStream()[1] : config->GetVelocity_FreeStreamND()[1];
+  su2double vel_w_inf = 0.0;
+  if (nDim == 3){
+    vel_w_inf = (is_dimensional) ? config->GetVelocity_FreeStream()[2] : config->GetVelocity_FreeStreamND()[2];
+  }
   const su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
   const su2double gas_constant = config->GetGas_Constant();
   const su2double sp_heat_ratio = config->GetGamma();
@@ -248,13 +254,18 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
       Tu = config->GetTurbulenceIntensity_FreeStream()*100;
 
     // Compute edge Mach number
+    const bool is_dimensional = (config->GetRef_NonDim() == DIMENSIONAL);
     const su2double pressure = flowNodes->GetPressure(iPoint);
-    const su2double pressure_inf = config->GetPressure_FreeStream();
-    const su2double rho_inf = config->GetDensity_FreeStream();
-    const su2double temp_inf = config->GetTemperature_FreeStream();
-    const su2double vel_u_inf = config->GetVelocity_FreeStream()[0];
-    const su2double vel_v_inf = config->GetVelocity_FreeStream()[1];
-    const su2double vel_w_inf = (nDim == 3) ? config->GetVelocity_FreeStream()[2] : 0.0;
+    const su2double pressure_inf = (is_dimensional) ? config->GetPressure_FreeStream() : config->GetPressure_FreeStreamND();
+    const su2double rho_inf = (is_dimensional) ? config->GetDensity_FreeStream() : config->GetDensity_FreeStreamND();
+    const su2double temp_inf = (is_dimensional) ? config->GetTemperature_FreeStream() : config->GetTemperature_FreeStreamND();
+
+    const su2double vel_u_inf = (is_dimensional) ?  config->GetVelocity_FreeStream()[0] : config->GetVelocity_FreeStreamND()[0];
+    const su2double vel_v_inf = (is_dimensional) ?  config->GetVelocity_FreeStream()[1] : config->GetVelocity_FreeStreamND()[1];
+    su2double vel_w_inf = 0.0;
+    if (nDim == 3){
+      vel_w_inf = (is_dimensional) ? config->GetVelocity_FreeStream()[2] : config->GetVelocity_FreeStreamND()[2];
+    }
     su2double vel_inf = sqrt(vel_u_inf*vel_u_inf + vel_v_inf*vel_v_inf + vel_w_inf*vel_w_inf);
     const su2double gas_constant = config->GetGas_Constant();
     const su2double sp_heat_ratio = config->GetGamma();
