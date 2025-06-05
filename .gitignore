@@ -1,3 +1,7 @@
+# Add ignore files for debugging
+cscope.out
+.venv
+
 # Compiled Object files
 *.slo
 *.lo
