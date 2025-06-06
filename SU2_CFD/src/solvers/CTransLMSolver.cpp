@@ -290,7 +290,8 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
     // Compressibility correction term for Re_c
     if (options.LMCompressible){
       const su2double C_Mach_e = 1.0 + Mach_e*(-0.06124 + Mach_e*(0.2402 - 0.00346*Mach_e));
-      Corr_Rec *= C_Mach_e;
+      // DEBUG: Changing to division
+      Corr_Rec /= C_Mach_e;
     }
 
     su2double R_t = 1.0;

@@ -143,7 +143,8 @@ class CSourcePieceWise_TransLM final : public CNumerics {
       // Cibin: Compressibility correction term for Rec
       if (options.LMCompressible){
         const su2double C_Mach_e = 1.0 + Mach_e_i*(-0.06124 + Mach_e_i*(0.2402 - 0.00346*Mach_e_i));
-        Corr_Rec *= C_Mach_e;
+        // DEBUG: Changing to division
+        Corr_Rec /= C_Mach_e;
       }
 
       /*--- F_length correlation*/
