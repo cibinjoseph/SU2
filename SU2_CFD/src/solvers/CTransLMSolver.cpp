@@ -25,6 +25,7 @@
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
 #include <iostream>
 
 #include "../../include/solvers/CTransLMSolver.hpp"
@@ -276,7 +277,12 @@ void CTransLMSolver::Postprocessing(CGeometry *geometry, CSolver **solver_contai
 
     const su2double sound_e = sqrt(sp_heat_ratio*gas_constant*temp_inf*pressure_ratio);
     const su2double vel_e = sqrt(pow(vel_inf, 2) + pressure_term);
-    const su2double Mach_e = vel_e / sound_e;
+    su2double Mach_e = vel_e / sound_e;
+
+    // Check for nan
+    if (std::isnan(Mach_e)){
+      Mach_e = 0.0;
+    }
     nodes -> SetMachE(iPoint, Mach_e);
 
     su2double Corr_Rec = TransCorrelations.ReThetaC_Correlations(Tu, Re_t);
